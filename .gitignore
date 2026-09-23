@@ -58,6 +58,11 @@ data/documents/*
 vectorstore/*
 !vectorstore/.gitkeep
 
+# Large local binaries / tools
+tools/*.exe
+cloudflared.exe
+*.exe
+
 # IDEs & OS
 .vscode/
 .idea/
