@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import {
   Plus,
   MessageSquare,
-  FileText,
   Cpu,
   ShieldCheck,
   Sparkles,
@@ -54,24 +53,18 @@ export default function Home() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#121214] text-zinc-100 font-sans antialiased">
-      {/* SIDEBAR (Claude-style clean minimalist drawer) */}
-      <aside className="w-64 flex-shrink-0 bg-[#17171a] border-r border-zinc-800/80 flex flex-col justify-between hidden md:flex">
-        {/* Top sidebar area */}
+      <aside className="w-64 flex-shrink-0 bg-[#17171a] border-r border-zinc-800/80 flex-col justify-between hidden md:flex">
         <div className="p-3.5 space-y-4 overflow-y-auto">
-          {/* Workspace Title */}
           <div className="flex items-center gap-2.5 px-2 py-1">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center text-white shadow-sm">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h1 className="font-semibold text-xs text-zinc-100 tracking-tight">
-                Multimodal AI
-              </h1>
+              <h1 className="font-semibold text-xs text-zinc-100 tracking-tight">Multimodal AI</h1>
               <p className="text-[10px] text-zinc-400">Local · Zero-API-Cost</p>
             </div>
           </div>
 
-          {/* New Chat Button */}
           <button
             type="button"
             onClick={() => window.location.reload()}
@@ -84,7 +77,6 @@ export default function Home() {
             <span className="text-[10px] text-zinc-400 font-mono">⌘N</span>
           </button>
 
-          {/* Chats Section */}
           <div className="space-y-1.5 pt-2">
             <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 px-2">
               Conversations
@@ -111,7 +103,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Active Model Stack */}
           <div className="space-y-2 pt-3 border-t border-zinc-800/60">
             <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 px-2">
               Model Engine
@@ -122,9 +113,7 @@ export default function Home() {
                   <Cpu className="w-3.5 h-3.5 text-amber-400" />
                   Text Model
                 </span>
-                <span className="font-mono text-[11px] text-amber-300 font-medium">
-                  qwen3.5:4b
-                </span>
+                <span className="font-mono text-[11px] text-amber-300 font-medium">qwen3.5:4b</span>
               </div>
               <div className="text-[10px] text-zinc-400 border-t border-zinc-800/60 pt-1.5 flex justify-between">
                 <span>Orchestrator:</span>
@@ -134,7 +123,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Bottom sidebar status */}
         <div className="p-3 border-t border-zinc-800/70 bg-[#141417] space-y-2 text-[11px]">
           <div className="flex items-center justify-between px-1">
             <span className="flex items-center gap-1.5 text-zinc-400">
@@ -153,8 +141,14 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* MAIN CONVERSATION WORKSPACE */}
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#121214] p-2 sm:p-4">
+        <div className="mb-2 flex items-center justify-between rounded-2xl border border-zinc-800/80 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-400 md:hidden">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            <span className="text-zinc-200 font-medium">Multimodal AI</span>
+          </div>
+          <span className="text-zinc-500">{backendStatus === "connected" ? "Online" : backendStatus}</span>
+        </div>
         <Chat backendStatus={backendStatus} />
       </main>
     </div>

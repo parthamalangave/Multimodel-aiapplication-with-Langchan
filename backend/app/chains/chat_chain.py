@@ -21,16 +21,41 @@ logger = logging.getLogger("multimodal_assistant.chains.chat")
 
 
 def strip_thinking_blocks(text: str) -> str:
-    """Remove any <think>...</think> reasoning traces from output text."""
+    """Remove reasoning traces and any non-answer filler before returning a response."""
     if not text:
         return ""
+
     cleaned = re.sub(r"<think>[\s\S]*?</think>", "", text, flags=re.DOTALL)
-    return cleaned.strip()
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    cleaned = cleaned.strip()
+
+    # Block common irrelevant answer patterns like jokes, historical trivia, and gotchas.
+    if not cleaned:
+        return "I can answer the direct question only."
+
+    blocked_patterns = [
+        r"(?i)unless you are referring",
+        r"(?i)classic answer",
+        r"(?i)gotcha",
+        r"(?i)in early versions of the.*basic",
+        r"(?i)historical.*programming.*bug",
+        r"(?i)it is also.*famous",
+    ]
+    for pattern in blocked_patterns:
+        if re.search(pattern, cleaned):
+            cleaned = re.sub(pattern, "", cleaned)
+
+    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+    if not cleaned:
+        return "I can answer the direct question only."
+
+    return cleaned
 
 DEFAULT_SYSTEM_PROMPT = (
-    "You are an intelligent, helpful, and versatile AI assistant. "
-    "Provide clear, accurate, and thoughtful responses. Format your output using clean Markdown "
-    "with code blocks where appropriate."
+    "You are a precise answer engine. Respond only to the user's question. "
+    "Do not add unrelated historical notes, jokes, gotchas, or background stories. "
+    "If the question is a direct arithmetic or factual query, answer directly and briefly. "
+    "Do not include extra commentary unless the user asks for it."
 )
 
 

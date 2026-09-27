@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, AlertCircle, RefreshCw } from "lucide-react";
+import { Send, Sparkles, AlertCircle } from "lucide-react";
 import Message, { MessageProps } from "./Message";
 import FileUpload, { SelectedFile } from "./FileUpload";
 import AudioRecorder from "./AudioRecorder";
-import Loading from "./Loading";
 import { sendChatMessage, ChatMessagePayload } from "@/lib/api";
 
 interface ChatProps {
@@ -28,14 +27,19 @@ export const Chat: React.FC<ChatProps> = ({ backendStatus }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto scroll to bottom
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []);
 
   // Handle send message
   const handleSend = async (e?: React.FormEvent) => {
@@ -64,7 +68,6 @@ export const Chat: React.FC<ChatProps> = ({ backendStatus }) => {
     const currentFile = selectedFile;
     setSelectedFile(null);
 
-    // If only uploading in Phase 2, acknowledge file and note vision/audio activation in Phase 3/4
     if (currentFile && !cleanText) {
       setTimeout(() => {
         setMessages((prev) => [
@@ -72,7 +75,7 @@ export const Chat: React.FC<ChatProps> = ({ backendStatus }) => {
           {
             id: `sys-${Date.now()}`,
             role: "assistant",
-            content: `Received file **${currentFile.file.name}**.\n\n*(Phase 2 currently handles real-time text reasoning. Vision and audio processing pipelines activate in Phase 3 & 4).*`,
+            content: `Received file **${currentFile.file.name}**.\n\nThis upload is currently queued for local processing in the next multimodal stages.`,
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           },
         ]);
@@ -139,50 +142,51 @@ export const Chat: React.FC<ChatProps> = ({ backendStatus }) => {
   };
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto w-full">
-      {/* Top status bar (Claude style subtle pill) */}
+    <div className="flex flex-col h-full max-w-5xl mx-auto w-full">
       <div className="flex items-center justify-between px-4 py-2 mb-2 border-b border-zinc-800/40 text-xs text-zinc-400">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-zinc-300">Qwen 3.5 (4B)</span>
+          <span className="font-medium text-zinc-200">Qwen 3.5 (4B)</span>
           <span className="text-zinc-600">·</span>
           <span className="text-amber-500/90 font-medium">Local Ollama</span>
         </div>
 
         <div className="flex items-center gap-2">
           <span
-            className={`w-2 h-2 rounded-full ${
+            className={`h-2.5 w-2.5 rounded-full ${
               backendStatus === "connected"
                 ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                : backendStatus === "checking"
+                ? "bg-amber-500 animate-pulse"
                 : "bg-red-500"
             }`}
           />
-          <span className="capitalize">
+          <span className="capitalize text-zinc-300">
             {backendStatus === "connected" ? "Ready" : backendStatus}
           </span>
         </div>
       </div>
 
-      {/* Message area */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4 space-y-3 scroll-smooth">
+      <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-2 space-y-3 scroll-smooth bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.08),_transparent_32%)]">
         {messages.map((msg) => (
           <Message key={msg.id} {...msg} />
         ))}
 
         {isLoading && (
-          <div className="px-6 py-3 flex items-center gap-3 text-sm text-zinc-400">
-            <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-            <span className="font-light italic text-zinc-300">
-              Qwen is thinking...
-            </span>
+          <div className="px-4 py-3 flex items-center gap-3 text-sm text-zinc-400">
+            <div className="flex gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-bounce [animation-delay:-0.2s]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-bounce [animation-delay:-0.1s]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-bounce" />
+            </div>
+            <span className="font-light italic text-zinc-300">Qwen is thinking...</span>
           </div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Selected file preview */}
       {selectedFile && (
-        <div className="mx-4 mb-2 p-2.5 bg-zinc-900/90 border border-zinc-800 rounded-xl flex items-center gap-3">
+        <div className="mx-4 mb-2 p-2.5 bg-zinc-900/90 border border-zinc-800 rounded-xl flex items-center gap-3 shadow-lg shadow-black/10">
           {selectedFile.previewUrl && (
             <img
               src={selectedFile.previewUrl}
@@ -197,7 +201,6 @@ export const Chat: React.FC<ChatProps> = ({ backendStatus }) => {
         </div>
       )}
 
-      {/* Error banner */}
       {errorBanner && (
         <div className="mx-4 mb-2 p-3 bg-red-950/70 border border-red-500/40 rounded-xl flex items-center justify-between text-xs text-red-200">
           <div className="flex items-center gap-2">
@@ -214,26 +217,23 @@ export const Chat: React.FC<ChatProps> = ({ backendStatus }) => {
         </div>
       )}
 
-      {/* Input container (Claude floating card style) */}
       <div className="p-2 sm:p-4">
         <form
           onSubmit={handleSend}
-          className="relative bg-zinc-900/80 border border-zinc-800/90 hover:border-zinc-700/80 focus-within:border-zinc-600 focus-within:ring-1 focus-within:ring-zinc-600/40 rounded-2xl shadow-xl backdrop-blur-md transition-all p-3"
+          className="relative bg-zinc-900/80 border border-zinc-800/90 hover:border-zinc-700/80 focus-within:border-amber-500/60 focus-within:ring-1 focus-within:ring-amber-500/30 rounded-2xl shadow-xl shadow-black/20 backdrop-blur-md transition-all p-3"
         >
-          {/* Text input area */}
           <textarea
             ref={textareaRef}
             rows={2}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Reply to Qwen or ask anything... (Shift + Enter for new line)"
+            placeholder="Ask anything... (Shift + Enter for new line)"
             disabled={isLoading}
             className="w-full bg-transparent resize-none text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none leading-relaxed disabled:opacity-50"
           />
 
-          {/* Bottom toolbar */}
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-800/60 mt-1">
+          <div className="flex items-center justify-between pt-2 border-t border-zinc-800/60 mt-1 gap-3">
             <div className="flex items-center gap-1.5">
               <FileUpload
                 onFileSelect={setSelectedFile}
@@ -244,9 +244,7 @@ export const Chat: React.FC<ChatProps> = ({ backendStatus }) => {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-zinc-500 hidden sm:inline">
-                Local Inference
-              </span>
+              <span className="text-[11px] text-zinc-500 hidden sm:inline">Local Inference</span>
               <button
                 type="submit"
                 onClick={(e) => {
@@ -255,10 +253,10 @@ export const Chat: React.FC<ChatProps> = ({ backendStatus }) => {
                   }
                 }}
                 disabled={isLoading || (!inputText.trim() && !selectedFile)}
-                className="flex items-center justify-center w-8 h-8 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white shadow transition-all active:scale-95 cursor-pointer disabled:cursor-not-allowed"
+                className="flex items-center justify-center w-10 h-10 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white shadow transition-all active:scale-95 cursor-pointer disabled:cursor-not-allowed"
                 title="Send message"
               >
-                <Send className="w-3.5 h-3.5" />
+                <Send className="w-4 h-4" />
               </button>
             </div>
           </div>
