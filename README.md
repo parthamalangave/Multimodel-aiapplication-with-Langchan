@@ -176,9 +176,18 @@ ollama pull nomic-embed-text
 - **Model Out of Memory**:
   For systems with limited VRAM, lower model quantizations or ensure GPU acceleration is enabled in Ollama.
 
----
+## 10. Hosted Deployment
 
-## 10. Development Roadmap
+The frontend is deployed separately on Vercel. The backend can be deployed from the repository's `render.yaml` blueprint.
+
+1. In Render, create a new Blueprint and select this GitHub repository.
+2. When prompted, enter `OPENAI_API_KEY` as a secret. Do not commit this key or put it in frontend environment variables.
+3. After the Render service is healthy, copy its public URL.
+4. In Vercel project settings, add `NEXT_PUBLIC_API_URL` with the Render URL for Production, then redeploy the frontend.
+
+The hosted backend uses OpenAI and may incur API usage charges. The Render free instance can sleep while idle, causing a delay on the first request. Local development continues to use Ollama by default. Hosted uploads and vector data use ephemeral storage and are not persisted.
+
+## 11. Development Roadmap
 
 - [x] **Phase 1**: Foundation & Scaffolding (FastAPI, Next.js, Health check, Configuration)
 - [ ] **Phase 2**: Text AI (Ollama + LangChain + Qwen3.5)

@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: multimodal-ai-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: LLM_PROVIDER
+        value: openai
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        value: '["https://multimodel-aiapplication-with-langchan-ektr0riog.vercel.app"]'
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: UPLOAD_DIR
+        value: /tmp/uploads
+      - key: DOCUMENT_DIR
+        value: /tmp/documents
+      - key: VECTORSTORE_DIR
+        value: /tmp/vectorstore
