@@ -15,7 +15,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: CORS_ORIGINS
-        value: '["https://multimodel-aiapplication-with-langchan-ektr0riog.vercel.app"]'
+        value: '["https://multimodel-aiapplication-with-langc.vercel.app","http://localhost:3000","http://127.0.0.1:3000"]'
       - key: ENVIRONMENT
         value: production
       - key: DEBUG
